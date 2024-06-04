@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model MercorUsers {
+  userId                 String   @id @default(uuid())
+  email                  String   @unique
+  name                   String?
+  phone                  String?
+  residence              Json?
+  profilePic             String?
+  createdAt              DateTime @default(now())
+  lastLogin              DateTime @default(now())
+  notes                  String?
+  referralCode           String   @unique @default(uuid())
+  isGptEnabled           Boolean  @default(false)
+  preferredRole          String?
+  fullTimeStatus         String?
+  workAvailability       String?
+  fullTimeSalaryCurrency String?
+  fullTimeSalary         String?
+  partTimeSalaryCurrency String?
+  partTimeSalary         String?
+  fullTime               Boolean  @default(false)
+  fullTimeAvailability   Int?
+  partTime               Boolean  @default(false)
+  partTimeAvailability   Int?
+  w8BenUrl               Json?
+  tosUrl                 String?
+  policyUrls             Json?
+  isPreVetted            Boolean  @default(false)
+  isActive               Boolean  @default(false)
+  isComplete             Boolean  @default(false)
+  summary                String?
+  preVettedAt            DateTime?
+  skills                 MercorUserSkills[]
+  resumes                UserResume[]
+}
+
+model Skills {
+  skillId    String            @id @default(uuid())
+  skillName  String
+  skillValue String            @unique
+  users      MercorUserSkills[]
+}
+
+model MercorUserSkills {
+  userId   String
+  skillId  String
+  isPrimary Boolean  @default(false)
+  order    Int       @default(0)
+
+  user MercorUsers @relation(fields: [userId], references: [userId])
+  skill Skills @relation(fields: [skillId], references: [skillId])
+
+  @@id([userId, skillId])
+}
+
+model UserResume {
+  resumeId               String               @id @default(uuid())
+  url                    String?
+  filename               String
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @default(now()) @updatedAt
+  source                 String               @default("platform")
+  ocrText                String?
+  ocrEmail               String?
+  ocrGithubUsername      String?
+  resumeBasedQuestions   String?
+  isInvitedToInterview   Boolean              @default(false)
+  reminderTasksIds       Json?
+  userId                 String               @unique
+  user                   MercorUsers          @relation(fields: [userId], references: [userId])
+  personalInformation    PersonalInformation[]
+  workExperience         WorkExperience[]
+  education              Education[]
+}
+
+model PersonalInformation {
+  personalInformationId String  @id @default(uuid())
+  name                  String?
+  location              Json?
+  email                 Json?
+  phone                 Json?
+  resumeId              String
+  resume                UserResume @relation(fields: [resumeId], references: [resumeId])
+}
+
+model WorkExperience {
+  workExperienceId String  @id @default(uuid())
+  company          String?
+  role             String?
+  startDate        String?
+  endDate          String?
+  description      String?
+  locationCity     String?
+  locationCountry  String?
+  resumeId         String
+  resume           UserResume @relation(fields: [resumeId], references: [resumeId])
+
+  @@index([company])
+}
+
+model Education {
+  educationId String  @id @default(uuid())
+  degree      String?
+  major       String?
+  school      String?
+  startDate   String?
+  endDate     String?
+  grade       String?
+  resumeId    String
+  resume      UserResume @relation(fields: [resumeId], references: [resumeId])
+
+  @@index([school])
+}
