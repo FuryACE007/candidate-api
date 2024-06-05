@@ -41,7 +41,7 @@ export class CandidatesService {
       // Log after adding skills condition
       console.log('After adding skills condition:', whereClause);
     }
-    const users = await this.prisma.mercorUsers.findMany({
+    let users = await this.prisma.mercorUsers.findMany({
       where: whereClause,
       select: {
         name: true,
@@ -51,6 +51,8 @@ export class CandidatesService {
         partTimeAvailability: true,
         fullTimeSalary: true,
         partTimeSalary: true,
+        fullTimeSalaryCurrency: true, // Add this line
+        partTimeSalaryCurrency: true, // Add this line
         skills: {
           select: {
             skill: {
@@ -63,15 +65,76 @@ export class CandidatesService {
       },
     });
 
-    return users.map((user) => ({
+    if (budget) {
+      users = users.filter((user) =>
+        fullTime
+          ? Number(user.fullTimeSalary) <= budget
+          : Number(user.partTimeSalary) <= budget,
+      );
+    }
+
+    const rankedUsers = this.rankUsers(
+      users,
+      partTime,
+      fullTime,
+      budget,
+      skills,
+    );
+
+    return rankedUsers.map((user) => ({
       name: user.name,
       country: user.residence,
       availability: user.workAvailability,
       skills: user.skills.map((userSkill) => userSkill.skill.skillName),
+      fullTimeSalaryCurrency: fullTime
+        ? user.fullTimeSalaryCurrency
+        : undefined,
+      fullTimeSalary: fullTime ? user.fullTimeSalary : undefined,
+      partTimeSalaryCurrency: partTime
+        ? user.partTimeSalaryCurrency
+        : undefined,
+      partTimeSalary: partTime ? user.partTimeSalary : undefined,
     }));
   }
 
   async findAllUsers() {
     return this.prisma.mercorUserSkills.findMany();
+  }
+
+  rankUsers(
+    users: any[],
+    partTime?: boolean,
+    fullTime?: boolean,
+    budget?: number,
+    skills: string[] = [],
+  ) {
+    const weights = {
+      partTime: 1,
+      fullTime: 2,
+      budget: 3,
+      skills: 0.5,
+    };
+
+    const rankedUsers = users.map((user) => {
+      const userSkills = user.skills.map(
+        (userSkill) => userSkill.skill.skillName,
+      );
+      const matchingSkills = skills.filter((skill) =>
+        userSkills.includes(skill),
+      );
+      const skillWeight = matchingSkills.length * weights.skills;
+
+      return {
+        ...user,
+        score:
+          (partTime ? weights.partTime : 0) +
+          (fullTime ? weights.fullTime : 0) +
+          (Number(user.fullTimeSalary) <= budget ? weights.budget : 0) +
+          (Number(user.partTimeSalary) <= budget ? weights.budget : 0) +
+          skillWeight,
+      };
+    });
+
+    return rankedUsers.sort((a, b) => b.score - a.score);
   }
 }
