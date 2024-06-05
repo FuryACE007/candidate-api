@@ -73,7 +73,15 @@ export class CandidatesService {
       );
     }
 
-    return users.map((user) => ({
+    const rankedUsers = this.rankUsers(
+      users,
+      partTime,
+      fullTime,
+      budget,
+      skills,
+    );
+
+    return rankedUsers.map((user) => ({
       name: user.name,
       country: user.residence,
       availability: user.workAvailability,
@@ -91,5 +99,42 @@ export class CandidatesService {
 
   async findAllUsers() {
     return this.prisma.mercorUserSkills.findMany();
+  }
+
+  rankUsers(
+    users: any[],
+    partTime?: boolean,
+    fullTime?: boolean,
+    budget?: number,
+    skills: string[] = [],
+  ) {
+    const weights = {
+      partTime: 1,
+      fullTime: 2,
+      budget: 3,
+      skills: 0.5,
+    };
+
+    const rankedUsers = users.map((user) => {
+      const userSkills = user.skills.map(
+        (userSkill) => userSkill.skill.skillName,
+      );
+      const matchingSkills = skills.filter((skill) =>
+        userSkills.includes(skill),
+      );
+      const skillWeight = matchingSkills.length * weights.skills;
+
+      return {
+        ...user,
+        score:
+          (partTime ? weights.partTime : 0) +
+          (fullTime ? weights.fullTime : 0) +
+          (Number(user.fullTimeSalary) <= budget ? weights.budget : 0) +
+          (Number(user.partTimeSalary) <= budget ? weights.budget : 0) +
+          skillWeight,
+      };
+    });
+
+    return rankedUsers.sort((a, b) => b.score - a.score);
   }
 }
