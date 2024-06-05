@@ -7,11 +7,21 @@ export class CandidatesController {
 
   @Get()
   async findAll(
-    @Query('message') message: string,
+    @Query('partTime') partTime: string,
+    @Query('fullTime') fullTime: string,
+    @Query('budget') budget: number,
+    @Query('skills') skills: string,
     @Query('page') page: number,
     @Query('limit') limit: number,
   ) {
-    return this.candidatesService.findCandidates(message, page, limit);
+    return this.candidatesService.findCandidates(
+      partTime === 'true',
+      fullTime === 'true',
+      budget,
+      skills ? skills.split(',') : [],
+      page,
+      limit,
+    );
   }
 
   @Get('all')
