@@ -11,12 +11,16 @@ export class CandidatesController {
     @Query('fullTime') fullTime: string,
     @Query('budget') budget: number,
     @Query('skills') skills: string,
+    @Query('page') page: number,
+    @Query('limit') limit: number,
   ) {
     return this.candidatesService.findCandidates(
       partTime === 'true',
       fullTime === 'true',
       budget,
       skills ? skills.split(',') : [],
+      page,
+      limit,
     );
   }
 
