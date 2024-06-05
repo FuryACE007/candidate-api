@@ -11,7 +11,7 @@ export class CandidatesService {
     budget?: number,
     skills: string[] = [],
     page: number = 1,
-    limit: number = 10,
+    limit: number = 5,
   ) {
     const offset = (page - 1) * limit;
 
@@ -117,7 +117,7 @@ export class CandidatesService {
       partTime: 1,
       fullTime: 2,
       budget: 3,
-      skills: 0.5,
+      skills: 2,
     };
 
     const rankedUsers = users.map((user) => {
