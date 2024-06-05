@@ -11,7 +11,7 @@ export class CandidatesService {
     budget?: number,
     skills: string[] = [],
     page: number = 1,
-    limit: number = 5,
+    limit: number = 10,
   ) {
     const offset = (page - 1) * limit;
 
@@ -46,7 +46,7 @@ export class CandidatesService {
     }
     let users = await this.prisma.mercorUsers.findMany({
       skip: offset,
-      take: limit,
+      take: Number(limit),
       where: whereClause,
       select: {
         name: true,
@@ -117,7 +117,7 @@ export class CandidatesService {
       partTime: 1,
       fullTime: 2,
       budget: 3,
-      skills: 2,
+      skills: 5,
     };
 
     const rankedUsers = users.map((user) => {
