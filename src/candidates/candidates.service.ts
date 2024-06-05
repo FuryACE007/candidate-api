@@ -5,14 +5,9 @@ import { PrismaService } from '../prisma/prisma.service';
 export class CandidatesService {
   constructor(private prisma: PrismaService) {}
 
-  async findCandidates(
-    partTime?: boolean,
-    fullTime?: boolean,
-    budget?: number,
-    skills: string[] = [],
-    page: number = 1,
-    limit: number = 10,
-  ) {
+  async findCandidates(message: string, page: number = 1, limit: number = 10) {
+    const { fullTime, partTime, budget, skills } = this.extractParams(message);
+
     const offset = (page - 1) * limit;
 
     const whereClause: any = {
@@ -141,5 +136,28 @@ export class CandidatesService {
     });
 
     return rankedUsers.sort((a, b) => b.score - a.score);
+  }
+
+  extractParams(message: string) {
+    const fullTimeRegex = /full[- ]?time/i;
+    const partTimeRegex = /part[- ]?time/i;
+    const budgetRegex = /budget of (\d+)/i;
+    const skillsRegex = /(?:skill|skills|skilled in)[,:]? ([\w\s,]+)/i;
+
+    const fullTime = fullTimeRegex.test(message);
+    const partTime = partTimeRegex.test(message);
+    const budgetMatch = message.match(budgetRegex);
+    const budget = budgetMatch ? Number(budgetMatch[1]) : undefined;
+    const skillsMatch = message.match(skillsRegex);
+    const skills = skillsMatch
+      ? skillsMatch[1]
+          .split(',')
+          .map(
+            (skill) =>
+              skill.trim().charAt(0).toUpperCase() + skill.trim().slice(1),
+          )
+      : [];
+
+    return { fullTime, partTime, budget, skills };
   }
 }
