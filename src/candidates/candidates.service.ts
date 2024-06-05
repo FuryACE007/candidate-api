@@ -41,7 +41,7 @@ export class CandidatesService {
       // Log after adding skills condition
       console.log('After adding skills condition:', whereClause);
     }
-    const users = await this.prisma.mercorUsers.findMany({
+    let users = await this.prisma.mercorUsers.findMany({
       where: whereClause,
       select: {
         name: true,
@@ -51,6 +51,8 @@ export class CandidatesService {
         partTimeAvailability: true,
         fullTimeSalary: true,
         partTimeSalary: true,
+        fullTimeSalaryCurrency: true, // Add this line
+        partTimeSalaryCurrency: true, // Add this line
         skills: {
           select: {
             skill: {
@@ -63,11 +65,27 @@ export class CandidatesService {
       },
     });
 
+    if (budget) {
+      users = users.filter((user) =>
+        fullTime
+          ? Number(user.fullTimeSalary) <= budget
+          : Number(user.partTimeSalary) <= budget,
+      );
+    }
+
     return users.map((user) => ({
       name: user.name,
       country: user.residence,
       availability: user.workAvailability,
       skills: user.skills.map((userSkill) => userSkill.skill.skillName),
+      fullTimeSalaryCurrency: fullTime
+        ? user.fullTimeSalaryCurrency
+        : undefined,
+      fullTimeSalary: fullTime ? user.fullTimeSalary : undefined,
+      partTimeSalaryCurrency: partTime
+        ? user.partTimeSalaryCurrency
+        : undefined,
+      partTimeSalary: partTime ? user.partTimeSalary : undefined,
     }));
   }
 
