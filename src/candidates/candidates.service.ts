@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { every } from 'rxjs';
 
 @Injectable()
 export class CandidatesService {
@@ -11,7 +10,11 @@ export class CandidatesService {
     fullTime?: boolean,
     budget?: number,
     skills: string[] = [],
+    page: number = 1,
+    limit: number = 10,
   ) {
+    const offset = (page - 1) * limit;
+
     const whereClause: any = {
       // isActive: true,
     };
@@ -42,6 +45,8 @@ export class CandidatesService {
       console.log('After adding skills condition:', whereClause);
     }
     let users = await this.prisma.mercorUsers.findMany({
+      skip: offset,
+      take: limit,
       where: whereClause,
       select: {
         name: true,
