@@ -1,10 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CACHE_MANAGER, CacheKey, CacheStore } from '@nestjs/cache-manager';
 
 @Injectable()
 export class CandidatesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: CacheStore,
+  ) {}
 
+  @CacheKey(
+    'candidates-${JSON.stringify({partTime, fullTime, budget, skills, page, limit})}',
+  )
   async findCandidates(
     partTime?: boolean,
     fullTime?: boolean,
