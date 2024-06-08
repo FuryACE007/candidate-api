@@ -17,9 +17,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: async (configService: ConfigService) => ({
         store: 'memory',
         host: configService.get('REDIS_HOST'),
-        port: configService.get('REDIS_PORT'),
-        max: 1000,
-        ttl: configService.get('CACHE_TTL'),
+        port: parseInt(configService.get('REDIS_PORT')),
+        max: Number(configService.get('MAX_ITEM_IN_CACHE')),
+        ttl: parseInt(configService.get('CACHE_TTL')),
       }),
     }),
     CandidatesModule,
