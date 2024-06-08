@@ -51,7 +51,7 @@ export class CandidatesService {
       // Log after adding skills condition
       console.log('After adding skills condition:', whereClause);
     }
-    let users = await this.prisma.mercorUsers.findMany({
+    const users = await this.prisma.mercorUsers.findMany({
       skip: offset,
       take: Number(limit),
       where: whereClause,
@@ -77,21 +77,38 @@ export class CandidatesService {
       },
     });
 
-    if (budget) {
-      users = users.filter((user) =>
+    // Cache the result of budget filtering
+    const cacheKeyBudget = `budget-${JSON.stringify({ fullTime, budget })}`;
+    let budgetFilteredUsers: any[] =
+      await this.cacheManager.get(cacheKeyBudget);
+    if (!budgetFilteredUsers) {
+      budgetFilteredUsers = users.filter((user) =>
         fullTime
           ? Number(user.fullTimeSalary) <= budget
           : Number(user.partTimeSalary) <= budget,
       );
+      await this.cacheManager.set(cacheKeyBudget, budgetFilteredUsers);
     }
 
-    const rankedUsers = this.rankUsers(
-      users,
+    // Cache the result of ranking
+    const cacheKeyRanking = `ranking-${JSON.stringify({
       partTime,
       fullTime,
       budget,
       skills,
-    );
+    })}`;
+    let rankedUsers: any[] = await this.cacheManager.get(cacheKeyRanking);
+
+    if (!rankedUsers) {
+      rankedUsers = this.rankUsers(
+        budgetFilteredUsers,
+        partTime,
+        fullTime,
+        budget,
+        skills,
+      );
+      await this.cacheManager.set(cacheKeyRanking, rankedUsers);
+    }
 
     return rankedUsers.map((user) => ({
       name: user.name,
@@ -114,7 +131,7 @@ export class CandidatesService {
   }
 
   rankUsers(
-    users: any[],
+    users: any[] = [],
     partTime?: boolean,
     fullTime?: boolean,
     budget?: number,
