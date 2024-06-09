@@ -55,11 +55,11 @@ This project uses the [Nest](https://github.com/nestjs/nest) framework for its o
 
 ## Design Decisions and Challenges
 
-Initially, TypeORM was chosen to reduce the complexity of writing pure SQL queries and to mitigate SQL injection attack vulnerabilities. However, it complicated the structure by mixing queries with entity creation.
+Initially, TypeORM was chosen to reduce the complexity of writing pure SQL queries and to mitigate SQL injection attack vulnerabilities. However, it complicated the structure of queries and also, it wasn't very efficient.
 
 As a result, the project shifted to Prisma ORM, which simplified the process significantly, making it feel like running MongoDB queries.
 
-To further improve query response time, Redis store was used for caching query responses with a proper timeout.
+To further improve query response time, the Redis store was used for caching query responses with a proper timeout.
 
 A weighted score-based ranking algorithm and pagination were added to the [`findCandidates()`](src/candidates/candidates.service.ts) API.
 
