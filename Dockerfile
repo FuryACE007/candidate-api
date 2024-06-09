@@ -1,25 +1,18 @@
-FROM node:20-alpine
-
-# Set the working directory in the container to /app
+# First stage: build
+FROM node:20-alpine AS build
 WORKDIR /app
-
-# Copy package.json and package-lock.json into the directory
 COPY package*.json ./
-
-# Install the application dependencies
 RUN npm install
-
-# Bundle the app source inside the Docker image
 COPY . .
-
-# Generate prism client
-RUN npx prisma generate
-
-# Build the application
 RUN npm run build
 
-# Your app binds to port 3000 so you'll use the EXPOSE instruction to have it mapped by the Docker daemon
+# Second stage: run
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+COPY package*.json ./
+COPY prisma ./prisma/
+RUN npm install --only=production
+RUN npx prisma generate
 EXPOSE 3000
-
-# Define the command to run your app using CMD which defines your runtime
 CMD [ "npm", "run", "start:prod"]
