@@ -45,29 +45,22 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Test
+# Candidate API
 
-```bash
-# unit tests
-$ npm run test
+A progressive [Node.js](http://nodejs.org) framework for building efficient and scalable server-side applications.
 
-# e2e tests
-$ npm run test:e2e
+## Description
 
-# test coverage
-$ npm run test:cov
-```
+This project uses the [Nest](https://github.com/nestjs/nest) framework for its opinionated nature and MVC structure, which makes it easy to scale and maintain.
 
-## Support
+## Design Decisions and Challenges
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Initially, TypeORM was chosen to reduce the complexity of writing pure SQL queries and to mitigate SQL injection attack vulnerabilities. However, it complicated the structure by mixing queries with entity creation.
 
-## Stay in touch
+As a result, the project shifted to Prisma ORM, which simplified the process significantly, making it feel like running MongoDB queries.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+To further improve query response time, Redis store was used for caching query responses with a proper timeout.
 
-## License
+A weighted score-based ranking algorithm and pagination were added to the [`findCandidates()`](src/candidates/candidates.service.ts) API.
 
-Nest is [MIT licensed](LICENSE).
+Finally, the entire backend was Dockerized. The plan was to push it to GCR (Google Container Registry) and then deploy it to Google Cloud Run, but this could not be accomplished due to some account setup issues on GCP.
